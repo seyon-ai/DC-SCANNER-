@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DC-SCANNER - Edit</title>
+    <style>
+        :root {
+            --primary: #4a6bff;
+            --secondary: #ff6b6b;
+            --dark-bg: #121212;
+            --dark-surface: #1e1e1e;
+            --dark-text: #ffffff;
+            --light-bg: #f5f5f5;
+            --light-surface: #ffffff;
+            --light-text: #333333;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        body {
+            background-color: var(--dark-bg);
+            color: var(--dark-text);
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+        body.light-theme {
+            background-color: var(--light-bg);
+            color: var(--light-text);
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .editor-container {
+            background-color: var(--dark-surface);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        body.light-theme .editor-container {
+            background-color: var(--light-surface);
+        }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tool-btn {
+            padding: 8px 12px;
+            background-color: var(--dark-bg);
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: var(--dark-text);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        body.light-theme .tool-btn {
+            background-color: #f0f0f0;
+            border-color: #ddd;
+            color: var(--light-text);
+        }
+        .tool-btn:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+        .editor {
+            width: 100%;
+            min-height: 400px;
+            padding: 15px;
+            background-color: var(--dark-bg);
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: inherit;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+        body.light-theme .editor {
+            background-color: white;
+            border-color: #ddd;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--primary);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="container">
+        <header>
+            <div class="logo">DC-SCANNER</div>
+            <button class="theme-toggle" id="theme-toggle">
+                <span id="theme-icon">🌙</span>
+            </button>
+        </header>
+
+        <main>
+            <div class="editor-container">
+                <h2>Document Editor</h2>
+                
+                <div class="toolbar">
+                    <button class="tool-btn" data-command="bold" title="Bold">B</button>
+                    <button class="tool-btn" data-command="italic" title="Italic">I</button>
+                    <button class="tool-btn" data-command="underline" title="Underline">U</button>
+                    <button class="tool-btn" data-command="insertUnorderedList" title="Bullet List">• List</button>
+                    <button class="tool-btn" data-command="insertOrderedList" title="Numbered List">1. List</button>
+                    <button class="tool-btn" data-command="createLink" title="Link">🔗</button>
+                    <button class="tool-btn" data-command="formatBlock" data-value="h2" title="Heading">H2</button>
+                    <button class="tool-btn" data-command="formatBlock" data-value="p" title="Paragraph">P</button>
+                </div>
+                
+                <div id="editor" class="editor" contenteditable="true"></div>
+                
+                <div id="image-preview"></div>
+                
+                <div class="actions">
+                    <button class="btn" id="export-btn">Export Document</button>
+                    <button class="btn btn-secondary" id="back-btn">Back to Scan</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // DOM Elements
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const editor = document.getElementById('editor');
+        const exportBtn = document.getElementById('export-btn');
+        const backBtn = document.getElementById('back-btn');
+        const imagePreview = document.getElementById('image-preview');
+        const toolBtns = document.querySelectorAll('.tool-btn');
+
+        // Load scanned data
+        document.addEventListener('DOMContentLoaded', () => {
+            const scannedData = JSON.parse(sessionStorage.getItem('scannedData'));
+            if (scannedData) {
+                editor.innerHTML = scannedData.text.replace(/\n/g, '<br>');
+                
+                if (scannedData.image) {
+                    const img = document.createElement('img');
+                    img.src = scannedData.image;
+                    img.className = 'preview-image';
+                    imagePreview.appendChild(img);
+                }
+            }
+        });
+
+        // Theme toggle
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            themeIcon.textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
+        });
+
+        // Toolbar buttons
+        toolBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const command = btn.dataset.command;
+                const value = btn.dataset.value;
+                
+                if (command === 'createLink') {
+                    const url = prompt('Enter URL:');
+                    if (url) document.execCommand(command, false, url);
+                } else if (value) {
+                    document.execCommand(command, false, value);
+                } else {
+                    document.execCommand(command, false, null);
+                }
+                
+                editor.focus();
+            });
+        });
+
+        // Navigation
+        exportBtn.addEventListener('click', () => {
+            // Save current content
+            sessionStorage.setItem('editedText', editor.innerHTML);
+            window.location.href = 'export.html';
+        });
+
+        backBtn.addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

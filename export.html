@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DC-SCANNER - Export</title>
+    <style>
+        :root {
+            --primary: #4a6bff;
+            --secondary: #ff6b6b;
+            --dark-bg: #121212;
+            --dark-surface: #1e1e1e;
+            --dark-text: #ffffff;
+            --light-bg: #f5f5f5;
+            --light-surface: #ffffff;
+            --light-text: #333333;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        body {
+            background-color: var(--dark-bg);
+            color: var(--dark-text);
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+        body.light-theme {
+            background-color: var(--light-bg);
+            color: var(--light-text);
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .export-container {
+            background-color: var(--dark-surface);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        body.light-theme .export-container {
+            background-color: var(--light-surface);
+        }
+        .preview {
+            width: 100%;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: var(--dark-bg);
+            border: 1px solid #444;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        body.light-theme .preview {
+            background-color: white;
+            border-color: #ddd;
+        }
+        .options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--primary);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="container">
+        <header>
+            <div class="logo">DC-SCANNER</div>
+            <button class="theme-toggle" id="theme-toggle">
+                <span id="theme-icon">🌙</span>
+            </button>
+        </header>
+
+        <main>
+            <div class="export-container">
+                <h2>Export Document</h2>
+                
+                <div class="preview" id="export-preview"></div>
+                
+                <div class="options">
+                    <button class="btn" id="copy-btn">Copy to Clipboard</button>
+                    <button class="btn" id="pdf-btn">Export as PDF</button>
+                    <button class="btn" id="txt-btn">Export as TXT</button>
+                </div>
+                
+                <div class="actions">
+                    <button class="btn btn-secondary" id="edit-btn">Back to Edit</button>
+                    <button class="btn btn-secondary" id="new-btn">New Scan</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // DOM Elements
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const exportPreview = document.getElementById('export-preview');
+        const copyBtn = document.getElementById('copy-btn');
+        const pdfBtn = document.getElementById('pdf-btn');
+        const txtBtn = document.getElementById('txt-btn');
+        const editBtn = document.getElementById('edit-btn');
+        const newBtn = document.getElementById('new-btn');
+
+        // Load edited content
+        document.addEventListener('DOMContentLoaded', () => {
+            const editedText = sessionStorage.getItem('editedText');
+            if (editedText) {
+                exportPreview.innerHTML = editedText;
+            }
+        });
+
+        // Theme toggle
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            themeIcon.textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
+        });
+
+        // Export functions
+        copyBtn.addEventListener('click', () => {
+            const range = document.createRange();
+            range.selectNode(exportPreview);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            window.getSelection().removeAllRanges();
+            alert('Content copied to clipboard!');
+        });
+
+        pdfBtn.addEventListener('click', () => {
+            alert('PDF export would be implemented here with a library like jsPDF');
+            // In a real implementation, you would use jsPDF or similar
+        });
+
+        txtBtn.addEventListener('click', () => {
+            const textContent = exportPreview.textContent;
+            const blob = new Blob([textContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'document.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // Navigation
+        editBtn.addEventListener('click', () => {
+            window.location.href = 'edit.html';
+        });
+
+        newBtn.addEventListener('click', () => {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
